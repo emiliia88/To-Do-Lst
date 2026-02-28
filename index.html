@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Advanced To-Do List</title>
+    <style>
+        :root { --primary: #4a90e2; --success: #27ae60; --danger: #e74c3c; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 40px; }
+        .app { background: white; width: 450px; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        
+        .controls, .filters { margin-bottom: 20px; display: flex; gap: 10px; }
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; flex-grow: 1; }
+        button { cursor: pointer; border: none; border-radius: 6px; padding: 10px 15px; transition: 0.3s; }
+        
+        .btn-add { background: var(--primary); color: white; }
+        .task-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; }
+        .task-item.completed span { text-decoration: line-through; color: gray; }
+        
+        .actions button { margin-left: 5px; font-size: 12px; }
+        .btn-edit { background: #f39c12; color: white; }
+        .btn-del { background: var(--danger); color: white; }
+        
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="app">
+    <h2>📋 Список дел</h2>
+
+    <!-- Поиск и Добавление -->
+    <div class="controls">
+        <input type="text" id="taskInput" placeholder="Название новой задачи...">
+        <button class="btn-add" onclick="addTask()">+</button>
+    </div>
+
+    <div class="controls">
+        <input type="text" id="searchInput" placeholder="Поиск задач..." oninput="filterTasks()">
+    </div>
+
+    <!-- Фильтрация -->
+    <div class="filters">
+        <select id="statusFilter" onchange="filterTasks()">
+            <option value="all">Все задачи</option>
+            <option value="active">Не выполнены</option>
+            <option value="completed">Выполнены</option>
+        </select>
+    </div>
+
+    <div id="taskList">
+        <!-- Задачи появятся здесь -->
+    </div>
+</div>
+
+<script>
+    // Имитация БД (в реальности здесь будут fetch-запросы к API с SQLite)
+    let tasks = [];
+
+    function render() {
+        const list = document.getElementById('taskList');
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const filter = document.getElementById('statusFilter').value;
+
+        list.innerHTML = '';
+
+        tasks.forEach(task => {
+            const matchesSearch = task.text.toLowerCase().includes(searchTerm);
+            const matchesFilter = filter === 'all' || 
+                                 (filter === 'completed' && task.done) || 
+                                 (filter === 'active' && !task.done);
+
+            if (matchesSearch && matchesFilter) {
+                const div = document.createElement('div');
+                div.className = `task-item ${task.done ? 'completed' : ''}`;
+                div.innerHTML = `
+                    <span onclick="toggleTask(${task.id})">${task.text}</span>
+                    <div class="actions">
+                        <button class="btn-edit" onclick="editTask(${task.id})">✏️</button>
+                        <button class="btn-del" onclick="deleteTask(${task.id})">🗑</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            }
+        });
+    }
+
+    function addTask() {
+        const input = document.getElementById('taskInput');
+        if (!input.value) return;
+        tasks.push({ id: Date.now(), text: input.value, done: false });
+        input.value = '';
+        render();
+    }
+
+    function toggleTask(id) {
+        tasks = tasks.map(t => t.id === id ? {...t, done: !t.done} : t);
+        render();
+    }
+
+    function deleteTask(id) {
+        tasks = tasks.filter(t => t.id !== id);
+        render();
+    }
+
+    function editTask(id) {
+        const newText = prompt("Редактировать задачу:");
+        if (newText) {
+            tasks = tasks.map(t => t.id === id ? {...t, text: newText} : t);
+            render();
+        }
+    }
+
+    function filterTasks() { render(); }
+</script>
+
+</body>
+</html>
