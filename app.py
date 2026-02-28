@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, json
+from flask import Flask, render_template, request, jsonify
 import sqlite3
 
 app = Flask(__name__)
@@ -40,7 +40,7 @@ def get_tasks():
     cursor.execute(query, params)
     tasks = [{"id": row[0], "title": row[1], "status": row[2]} for row in cursor.fetchall()]
     conn.close()
-    return json(tasks)
+    return jsonify(tasks)
 
 @app.route('/tasks', methods=['POST'])
 def add_task():
@@ -50,7 +50,7 @@ def add_task():
     cursor.execute("INSERT INTO tasks (title) VALUES (?)", (data['title'],))
     conn.commit()
     conn.close()
-    return json({"status": "success"})
+    return jsonify({"status": "success"})
 
 @app.route('/tasks/<int:task_id>', methods=['PUT'])
 def update_task(task_id):
@@ -63,7 +63,7 @@ def update_task(task_id):
         cursor.execute("UPDATE tasks SET title = ? WHERE id = ?", (data['title'], task_id))
     conn.commit()
     conn.close()
-    return json({"status": "success"})
+    return jsonify({"status": "success"})
 
 @app.route('/tasks/<int:task_id>', methods=['DELETE'])
 def delete_task(task_id):
@@ -72,10 +72,9 @@ def delete_task(task_id):
     cursor.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
     conn.commit()
     conn.close()
-    return json({"status": "success"})
+    return jsonify({"status": "success"})
 
 
 if __name__ == '__main__':
     init_db()
     app.run(debug=True)
-
